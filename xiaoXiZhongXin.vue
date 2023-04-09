@@ -87,7 +87,7 @@ export default {
     setup(){
         // 添加事件监视器
         let emitter = new EventEmitter();
-        // 说明根据传递过来的消息然后转化到item里显示在template中，其中默认每个消息的flag初始为0，显示InfoFilled
+        // 说明根据传递过来的消息然后转化到item里显示在template中，其中默认每个消息的flag初始为0
         emitter.on('sendMessage',(message)=>{
             this.message = message;
         });
