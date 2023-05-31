@@ -23,7 +23,7 @@
         </v-list>
     </v-card>
 
-    <button @click="getData">获取数据</button>
+    <button v-if="this.show==true" @click="getData">获取数据</button>
 
     <dialog-component v-if="Visiable" ref="dialog"></dialog-component>
 
@@ -42,6 +42,7 @@ export default {
     },
     data: () => ({
         Visiable: false,
+        show: true,
         items: [
             
         ],
@@ -122,6 +123,8 @@ export default {
                     console.log('error')
                 }
             }
+            
+            this.show=false;
         },
     },
 
@@ -163,6 +166,9 @@ export default {
     }
 
 
+    .btn1{
+        display: 'true';
+    }
 
 
 </style>
