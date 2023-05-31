@@ -11,9 +11,10 @@
         </v-toolbar>
 
         <v-list v-for='item,index in items' :key='index' item-props lines="three">
-            <div @click="infoTipIcon(index, item.subtitle)">
+            <div @click="infoTipIcon(index, item.message)">
                 <div class="info" v-html="item.subtitle"></div>  
                 <div>
+                    <div class="updateTime">{{ item.updateTime }}</div>
                     <div class="unreadResumeWarning" v-if="1 != this.flag[index]"></div>
                     <div class="divide"></div>
                 </div>
@@ -21,6 +22,8 @@
             </div> 
         </v-list>
     </v-card>
+
+    <button @click="getData">获取数据</button>
 
     <dialog-component v-if="Visiable" ref="dialog"></dialog-component>
 
@@ -40,35 +43,15 @@ export default {
     data: () => ({
         Visiable: false,
         items: [
-            {
-                title: 'Brunch this weekend?',
-                subtitle: `<span class="text-primary">Ali Connors</span> &mdash; I'll be in your neighborhood doing errands this weekend. Do you want to hang out?`,
-            },
             
-            {
-                title: 'Summer BBQ',
-                subtitle: `<span class="text-primary">to Alex, Scott, Jennifer</span> &mdash; Wish I could come, but I'm out of town this weekend.`,
-            },
-            
-            {
-                title: 'Oui oui',
-                subtitle: '<span class="text-primary">Sandra Adams</span> &mdash; Do you have Paris recommendations? Have you ever been?',
-            },
-            
-            {
-                title: 'Birthday gift',
-                subtitle: '<span class="text-primary">Trevor Hansen</span> &mdash; Have any ideas about what we should get Heidi for her birthday?',
-            },
-            
-            {
-                title: 'Recipe to try',
-                subtitle: '<span class="text-primary">Britta Holt</span> &mdash; We should eat this: Grate, Squash, Corn, and tomatillo Tacos.',
-            },
         ],
 
         message:[],
 
         flag: [],
+
+        url: 'http://47.97.219.99:8018/cloudForm/getAllFormByUid/2',
+
     }),
 
     methods: {
@@ -81,7 +64,65 @@ export default {
                 //data是传递给弹窗页面的值
                 this.$refs.dialog.init(info);
             })
-        }
+        },
+
+        getData() {
+            // 数据API
+            var httpRequest = new XMLHttpRequest()
+            // URL填写
+            // 请求方法
+            httpRequest.open('GET', this.url)
+            // 请求头
+            httpRequest.setRequestHeader(
+                'Content-Type',
+                'application/x-www-form-urlencoded'
+            )
+            var _this = this
+            // 请求参数
+            httpRequest.send()
+            httpRequest.onreadystatechange = function () {
+                if (this.readyState === 4 && this.status === 200) {
+                    const result = JSON.parse(httpRequest.responseText)
+                    // 返回结果
+                    console.log(result)
+
+                    for(var i=0; i< result.data.length; i++){
+                        _this.items.push({
+                            'submitPeople': '',
+                            'describe': '',
+                            'deviceName': '',
+                            'devicePosition': '',
+                            'maintenance': '',
+                            'updateTime': '',
+                            'message': '',
+                            'subtitle': '',
+                        });
+                        console.log(result.data[i]['form']['submitPeople']);
+
+                        _this.items[i]['submitPeople'] = result.data[i]['form']['submitPeople']
+                        _this.items[i]['deviceName'] = result.data[i]['form']['deviceName']
+                        _this.items[i]['describe'] = result.data[i]['form']['describe']
+                        _this.items[i]['maintenance'] = result.data[i]['form']['maintenance']
+                        _this.items[i]['devicePosition'] = result.data[i]['form']['devicePosition']
+
+                        _this.items[i]['updateTime'] = result.data[i]['updateTime']
+
+                        _this.items[i]['subtitle'] = '<span class="text-primary">'
+                                                        + _this.items[i]['submitPeople']
+                                                        + '</span> &mdash;'
+                                                        + _this.items[i]['describe']
+                        
+                        _this.items[i]['message'] = [ '维护人员：' + _this.items[i]['maintenance'], 
+                                                        '任务：' + _this.items[i]['describe'] ]
+                                                       
+                    }
+
+                    
+                }else{
+                    console.log('error')
+                }
+            }
+        },
     },
 
     setup(){
@@ -103,6 +144,15 @@ export default {
         height: 10px;
         border-radius: 7px;
         background-color: #FF3B30;
+    }
+
+    .updateTime{
+        text-align: right;
+        font-size: 14px;
+    }
+
+    .info{
+        text-align:left;
     }
 
     .divide{
