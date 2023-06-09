@@ -2,10 +2,10 @@
   <div class="attendance-calendar">
     <div class="date-picker-container">
       <el-date-picker
-        v-model:value="selectedDate"
+        v-model="selectedDate"
         type="date"
         placeholder="Select date"
-        @update:modelValue="handleDateChange"
+        @change="handleDateChange"
         :picker-options="pickerOptions"
       ></el-date-picker>
     </div>
@@ -24,7 +24,7 @@
 
     <div class="calendar-container">
       <el-calendar
-        v-model:value="selectedDate"
+        v-model="selectedDate"
         :value="selectedDate"
         :range="false"
         :cell-class-name="setCellClassName"
@@ -45,53 +45,53 @@
 </template>
 
 <script>
-import { defineComponent, ref, reactive } from 'vue';
+import { ref, reactive } from 'vue';
 
-export default defineComponent({
+export default {
   setup() {
     const selectedDate = ref(null);
-    const attendanceLog = [
+    const attendanceLog = reactive([
       { date: '2023/05/01', clockIn: '09:00 AM', clockOut: '05:00 PM' },
       { date: '2023/05/05', clockIn: '08:30 AM', clockOut: '04:30 PM' },
-      { date: '2023/05/10', clockIn: '09:15 AM', clockOut: '05:15 PM' },
-    ];
-    const markedDates = attendanceLog.map((log) => log.date);
+      { date: '2023/05/10', clockIn: '09:15 AM', clockOut: '05:15 PM' }
+    ]);
+    const markedDates = attendanceLog.map(log => log.date);
     const rangeState = reactive({});
 
-    const isClockedIn = computed(() => {
-      const selectedLog = attendanceLog.find((log) => log.date === selectedDate.value);
+    function isClockedIn() {
+      const selectedLog = attendanceLog.find(log => log.date === selectedDate.value);
       return selectedLog && selectedLog.clockIn && !selectedLog.clockOut;
-    });
+    }
 
-    const pickerOptions = computed(() => {
+    function pickerOptions() {
       return {
-        disabledDate: isDateDisabled,
+        disabledDate: isDateDisabled
       };
-    });
+    }
 
     function handleDateChange(date) {
-      const selectedLog = attendanceLog.find((log) => log.date === date);
+      const selectedLog = attendanceLog.find(log => log.date === date);
       if (selectedLog && !selectedLog.clockOut) {
         selectedDate.value = null;
       }
     }
 
     function handleClockIn() {
-      const selectedLog = attendanceLog.find((log) => log.date === selectedDate.value);
+      const selectedLog = attendanceLog.find(log => log.date === selectedDate.value);
       if (selectedLog) {
         selectedLog.clockIn = getCurrentTime();
       } else {
         attendanceLog.push({
           date: selectedDate.value,
           clockIn: getCurrentTime(),
-          clockOut: null,
+          clockOut: null
         });
       }
       updateRangeState();
     }
 
     function handleClockOut() {
-      const selectedLog = attendanceLog.find((log) => log.date === selectedDate.value);
+      const selectedLog = attendanceLog.find(log => log.date === selectedDate.value);
       if (selectedLog) {
         selectedLog.clockOut = getCurrentTime();
       }
@@ -135,9 +135,13 @@ export default defineComponent({
       return rangeState[formattedDate];
     }
 
+    function handleCellClick({ date }) {
+      selectedDate.value = date;
+    }
+
     function updateRangeState() {
       rangeState = {};
-      attendanceLog.forEach((log) => {
+      attendanceLog.forEach(log => {
         const { date, clockIn, clockOut } = log;
         const formattedDate = formatDate(date);
         if (clockIn && clockOut) {
@@ -163,9 +167,11 @@ export default defineComponent({
       getStatusClass,
       getStatusText,
       setCellClassName,
+      handleCellClick,
+      updateRangeState
     };
-  },
-});
+  }
+};
 </script>
 
 <style scoped>
@@ -178,14 +184,14 @@ export default defineComponent({
   margin-bottom: 20px;
 }
 
-.el-button-row {
+.button-row {
   display: flex;
   justify-content: center;
   margin-bottom: 10px;
 }
 
-.el-clock-in-btn,
-.el-clock-out-btn {
+.clock-in-btn,
+.clock-out-btn {
   width: 200px;
 }
 
