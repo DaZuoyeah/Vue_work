@@ -25,6 +25,7 @@
     <div class="calendar-container">
       <el-calendar
         v-model="selectedDate"
+        :value="selectedDate"
         :range="false"
         :cell-class-name="setCellClassName"
         :range-state="rangeState"
@@ -45,7 +46,6 @@
 
 <script>
 import { ref, reactive } from 'vue';
-import { getCurrentTime, formatDate } from './utils'; // Assuming you have a separate file for utility functions
 
 export default {
   setup() {
@@ -65,21 +65,18 @@ export default {
 
     const pickerOptions = computed(() => {
       return {
-        disabledDate: (date) => {
-          // Implement your logic to disable specific dates
-          return false;
-        }
+        disabledDate: isDateDisabled
       };
     });
 
-    const handleDateChange = (date) => {
+    function handleDateChange(date) {
       const selectedLog = attendanceLog.find(log => log.date === date);
       if (selectedLog && !selectedLog.clockOut) {
         selectedDate.value = null;
       }
-    };
+    }
 
-    const handleClockIn = () => {
+    function handleClockIn() {
       const selectedLog = attendanceLog.find(log => log.date === selectedDate.value);
       if (selectedLog) {
         selectedLog.clockIn = getCurrentTime();
@@ -91,17 +88,26 @@ export default {
         });
       }
       updateRangeState();
-    };
+    }
 
-    const handleClockOut = () => {
+    function handleClockOut() {
       const selectedLog = attendanceLog.find(log => log.date === selectedDate.value);
       if (selectedLog) {
         selectedLog.clockOut = getCurrentTime();
       }
       updateRangeState();
-    };
+    }
 
-    const getStatusClass = (log) => {
+    function getCurrentTime() {
+      const now = new Date();
+      return now.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
+    }
+
+    function formatDate(date) {
+      return new Date(date).toLocaleDateString();
+    }
+
+    function getStatusClass(log) {
       if (log.clockIn && !log.clockOut) {
         return 'status-pending';
       } else if (log.clockIn && log.clockOut) {
@@ -109,9 +115,9 @@ export default {
       } else {
         return '';
       }
-    };
+    }
 
-    const getStatusText = (log) => {
+    function getStatusText(log) {
       if (log.clockIn && !log.clockOut) {
         return '上班中';
       } else if (log.clockIn && log.clockOut) {
@@ -119,17 +125,21 @@ export default {
       } else {
         return '';
       }
-    };
+    }
 
-    const setCellClassName = ({ date }) => {
+    function setCellClassName({ date }) {
       const formattedDate = formatDate(date);
       if (markedDates.includes(formattedDate)) {
         return 'marked-cell';
       }
       return rangeState[formattedDate];
-    };
+    }
 
-    const updateRangeState = () => {
+    function handleCellClick({ date }) {
+      selectedDate.value = date;
+    }
+
+    function updateRangeState() {
       rangeState = {};
       attendanceLog.forEach(log => {
         const { date, clockIn, clockOut } = log;
@@ -140,7 +150,7 @@ export default {
           rangeState[formattedDate] = 'clockIn';
         }
       });
-    };
+    }
 
     return {
       selectedDate,
@@ -150,9 +160,10 @@ export default {
       handleDateChange,
       handleClockIn,
       handleClockOut,
+      setCellClassName,
+      formatDate,
       getStatusClass,
-      getStatusText,
-      setCellClassName
+      getStatusText
     };
   }
 };
@@ -235,11 +246,11 @@ export default {
   border-radius: 50%;
 }
 
-.marked-cell-clockIn {
-  background-color: lightgreen;
+.marked-cell-clockIn::before {
+  background-color: red;
 }
 
-.marked-cell-clockOut {
-  background-color: lightblue;
+.marked-cell-clockOut::before {
+  background-color: green;
 }
 </style>
