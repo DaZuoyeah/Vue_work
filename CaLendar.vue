@@ -25,7 +25,6 @@
     <div class="calendar-container">
       <el-calendar
         v-model="selectedDate"
-        :value="selectedDate"
         :range="false"
         :cell-class-name="setCellClassName"
         :range-state="rangeState"
@@ -46,6 +45,7 @@
 
 <script>
 import { ref, reactive } from 'vue';
+import { getCurrentTime, formatDate } from './utils'; // Assuming you have a separate file for utility functions
 
 export default {
   setup() {
@@ -58,25 +58,28 @@ export default {
     const markedDates = attendanceLog.map(log => log.date);
     const rangeState = reactive({});
 
-    function isClockedIn() {
+    const isClockedIn = computed(() => {
       const selectedLog = attendanceLog.find(log => log.date === selectedDate.value);
       return selectedLog && selectedLog.clockIn && !selectedLog.clockOut;
-    }
+    });
 
-    function pickerOptions() {
+    const pickerOptions = computed(() => {
       return {
-        disabledDate: isDateDisabled
+        disabledDate: (date) => {
+          // Implement your logic to disable specific dates
+          return false;
+        }
       };
-    }
+    });
 
-    function handleDateChange(date) {
+    const handleDateChange = (date) => {
       const selectedLog = attendanceLog.find(log => log.date === date);
       if (selectedLog && !selectedLog.clockOut) {
         selectedDate.value = null;
       }
-    }
+    };
 
-    function handleClockIn() {
+    const handleClockIn = () => {
       const selectedLog = attendanceLog.find(log => log.date === selectedDate.value);
       if (selectedLog) {
         selectedLog.clockIn = getCurrentTime();
@@ -88,26 +91,17 @@ export default {
         });
       }
       updateRangeState();
-    }
+    };
 
-    function handleClockOut() {
+    const handleClockOut = () => {
       const selectedLog = attendanceLog.find(log => log.date === selectedDate.value);
       if (selectedLog) {
         selectedLog.clockOut = getCurrentTime();
       }
       updateRangeState();
-    }
+    };
 
-    function getCurrentTime() {
-      const now = new Date();
-      return now.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
-    }
-
-    function formatDate(date) {
-      return new Date(date).toLocaleDateString();
-    }
-
-    function getStatusClass(log) {
+    const getStatusClass = (log) => {
       if (log.clockIn && !log.clockOut) {
         return 'status-pending';
       } else if (log.clockIn && log.clockOut) {
@@ -115,9 +109,9 @@ export default {
       } else {
         return '';
       }
-    }
+    };
 
-    function getStatusText(log) {
+    const getStatusText = (log) => {
       if (log.clockIn && !log.clockOut) {
         return '上班中';
       } else if (log.clockIn && log.clockOut) {
@@ -125,21 +119,17 @@ export default {
       } else {
         return '';
       }
-    }
+    };
 
-    function setCellClassName({ date }) {
+    const setCellClassName = ({ date }) => {
       const formattedDate = formatDate(date);
       if (markedDates.includes(formattedDate)) {
         return 'marked-cell';
       }
       return rangeState[formattedDate];
-    }
+    };
 
-    function handleCellClick({ date }) {
-      selectedDate.value = date;
-    }
-
-    function updateRangeState() {
+    const updateRangeState = () => {
       rangeState = {};
       attendanceLog.forEach(log => {
         const { date, clockIn, clockOut } = log;
@@ -150,25 +140,19 @@ export default {
           rangeState[formattedDate] = 'clockIn';
         }
       });
-    }
+    };
 
     return {
       selectedDate,
       attendanceLog,
-      markedDates,
-      rangeState,
       isClockedIn,
       pickerOptions,
       handleDateChange,
       handleClockIn,
       handleClockOut,
-      getCurrentTime,
-      formatDate,
       getStatusClass,
       getStatusText,
-      setCellClassName,
-      handleCellClick,
-      updateRangeState
+      setCellClassName
     };
   }
 };
@@ -251,11 +235,11 @@ export default {
   border-radius: 50%;
 }
 
-.marked-cell-clockIn::before {
-  background-color: red;
+.marked-cell-clockIn {
+  background-color: lightgreen;
 }
 
-.marked-cell-clockOut::before {
-  background-color: green;
+.marked-cell-clockOut {
+  background-color: lightblue;
 }
 </style>
